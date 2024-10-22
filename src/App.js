@@ -19,6 +19,10 @@ function App() {
 
          {/* Modal Component */}
          <ModalCropVideo isOpen={isModalOpen} onClose={closeModal} />
+
+         <footer className="fixed bottom-6 left-1/2 -translate-x-1/2 -z-1 text-white text-opacity-70">
+            <span className="">Developed by <strong>Shubham Gujarathi</strong></span>
+         </footer>
       </div>
    );
 }
