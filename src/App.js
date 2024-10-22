@@ -1,25 +1,26 @@
-import logo from './logo.svg';
-import './App.css';
+import React, { useState } from "react";
+
+import CustomButton from "./components/CustomButton";
+import ModalCropVideo from "./components/modals/ModalCropVideo";
 
 function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+   const [isModalOpen, setIsModalOpen] = useState(false);
+
+   const openModal = () => setIsModalOpen(true);
+   const closeModal = () => setIsModalOpen(false);
+
+   return (
+      <div className="App">
+         <section className='bg-[hsl(225,7%,10%)] text-[#fff] w-full h-[100vh] flex justify-center items-center'>
+            <span className="">
+               <CustomButton buttonText={"Crop Video"} onClickHandle={openModal} />
+            </span>
+         </section>
+
+         {/* Modal Component */}
+         <ModalCropVideo isOpen={isModalOpen} onClose={closeModal} />
+      </div>
+   );
 }
 
 export default App;
