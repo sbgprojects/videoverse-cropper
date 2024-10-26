@@ -3,7 +3,7 @@ import CustomDropdown from '../CustomDropdown';
 import Draggable from 'react-draggable';
 import VideoHighlights from "../../assets/highlights.mp4";
 
-const Player = ({ aspectRatio, handleAspectRatioChange, isCropperActive, setPreview, onCropAreaChange = null }) => {
+const Player = ({ aspectRatio, handleAspectRatioChange, isCropperActive, setPreview, onCropAreaChange = null, jsonData, setJsonData }) => {
 
    // Player Variables
    const videoRef = useRef(null);
@@ -14,9 +14,11 @@ const Player = ({ aspectRatio, handleAspectRatioChange, isCropperActive, setPrev
    const [duration, setDuration] = useState(0);  // Update  d duration state
    const [currentTime, setCurrentTime] = useState(0);
    const [cropBox, setCropBox] = useState({ width: 0, height: 0, top: 0, left: 0 });
+   
 
    // #region Data
    const playBackSpeedData = [
+      { text: "0.25x", value: 0.25 },
       { text: "0.5x", value: 0.5 },
       { text: "1x", value: 1 },
       { text: "1.5x", value: 1.5 },
@@ -24,6 +26,7 @@ const Player = ({ aspectRatio, handleAspectRatioChange, isCropperActive, setPrev
       { text: "3x", value: 3 }
    ];
    const aspectRatioData = [
+      { text: "9:18", value: "9:18" },
       { text: "9:16", value: "9:16" },
       { text: "4:3", value: "4:3" },
       { text: "3:4", value: "3:4" },
@@ -112,7 +115,7 @@ const Player = ({ aspectRatio, handleAspectRatioChange, isCropperActive, setPrev
       const videoHeight = videoRef.current.offsetHeight;
 
       const [widthRatio, heightRatio] = aspectRatio.split(':').map(Number);
-      
+
       let cropWidth = videoWidth;
       let cropHeight = (cropWidth / widthRatio) * heightRatio;
 
@@ -147,24 +150,24 @@ const Player = ({ aspectRatio, handleAspectRatioChange, isCropperActive, setPrev
          canvas.height = cropBox.height;
 
          if (cropBox.width <= 0 || cropBox.height <= 0) {
-             console.error('Invalid cropBox dimensions:', cropBox);
-             return;
+            console.error('Invalid cropBox dimensions:', cropBox);
+            return;
          }
 
          context.drawImage(
-             video,
-             cropBox.left * 1.5, cropBox.top * 1.5, (cropBox.width * 1.5), (cropBox.height * 1.5),
-             0, 0, canvas.width, canvas.height
-         );         
+            video,
+            cropBox.left * 1.5, cropBox.top * 1.5, (cropBox.width * 1.5), (cropBox.height * 1.5),
+            0, 0, canvas.width, canvas.height
+         );
          setPreview(canvas.toDataURL());
-     };
+      };
 
       if (isCropperActive) {
-          const interval = setInterval(generateLivePreview, 1);
-          return () => clearInterval(interval);
+         const interval = setInterval(generateLivePreview, 10);
+         return () => clearInterval(interval);
       }
-      
-  }, [aspectRatio, cropBox, isCropperActive, setPreview]);
+
+   }, [aspectRatio, cropBox, isCropperActive, setPreview]);
    // #endregion
 
    // #region DragFunctions
@@ -174,6 +177,37 @@ const Player = ({ aspectRatio, handleAspectRatioChange, isCropperActive, setPrev
          left: Math.max(0, Math.min(data.x, videoRef.current.offsetWidth - prevBox.width)),
          top: Math.max(0, Math.min(data.y, videoRef.current.offsetHeight - prevBox.height))
       }));
+   };
+   // #endregion
+
+   // #region JSONDataFunctions
+   useEffect(() => {
+      let interval;
+      if (isPlaying) {
+         interval = setInterval(() => {
+            setJsonData((prevData) => [
+               ...prevData,
+               {
+                  timeStamp: videoRef.current.currentTime,
+                  coordinates: [cropBox.left, cropBox.top, cropBox.width, cropBox.height],
+                  volume,
+                  playbackSpeed,
+               },
+            ]);
+
+            console.log(jsonData);
+         }, 1000);
+      }
+      return () => clearInterval(interval);
+   }, [isPlaying, cropBox, volume, playbackSpeed]);
+
+   // Function to trigger JSON file download
+   const downloadJson = () => {
+      const blob = new Blob([JSON.stringify(jsonData, null, 2)], { type: 'application/json' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'videoData.json';
+      link.click();
    };
    // #endregion
 
@@ -196,22 +230,22 @@ const Player = ({ aspectRatio, handleAspectRatioChange, isCropperActive, setPrev
             </Draggable> */}
 
             {isCropperActive && (  // <--- Show cropper only if it's active
-               <Draggable  bounds="parent" onDrag={handleDrag}>
-                     <div
-                        className="crop-overlay 
+               <Draggable bounds="parent" onDrag={handleDrag}>
+                  <div
+                     className="crop-overlay 
                                     cursor-move  border-white
                                     absolute border top-0 left-0"
-                        style={{
-                           aspectRatio: `${aspectRatio.replace(":", " / ")}`,
-                           width: cropBox.width,
-                           height: cropBox.height,
-                        }}
-                     >
-                        <div className='absolute w-full h-[1px] border-b border-dashed border-white border-opacity-60 top-[33%]'></div>
-                        <div className='absolute w-full h-[1px] border-t border-dashed border-white border-opacity-60 bottom-[33%]'></div>
-                        <div className='absolute w-[1px] h-full border-r border-dashed border-white border-opacity-60 left-[33%]'></div>
-                        <div className='absolute w-[1px] h-full border-l border-dashed border-white border-opacity-60 right-[33%]'></div>
-                     </div>
+                     style={{
+                        aspectRatio: `${aspectRatio.replace(":", " / ")}`,
+                        width: cropBox.width,
+                        height: cropBox.height,
+                     }}
+                  >
+                     <div className='absolute w-full h-[1px] border-b border-dashed border-white border-opacity-60 top-[33%]'></div>
+                     <div className='absolute w-full h-[1px] border-t border-dashed border-white border-opacity-60 bottom-[33%]'></div>
+                     <div className='absolute w-[1px] h-full border-r border-dashed border-white border-opacity-60 left-[33%]'></div>
+                     <div className='absolute w-[1px] h-full border-l border-dashed border-white border-opacity-60 right-[33%]'></div>
+                  </div>
                </Draggable>
             )}
          </div>

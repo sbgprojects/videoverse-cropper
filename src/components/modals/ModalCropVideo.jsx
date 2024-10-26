@@ -27,6 +27,20 @@ const ModalCropVideo = ({ isOpen, onClose }) => {
    }, [aspectRatio])
 
 
+   // JSON Data variables
+   const [jsonData, setJsonData] = useState([]); // json data
+
+   // function to download json data
+   const downloadJson = () => {
+      console.log("inside download function");
+      
+      const blob = new Blob([JSON.stringify(jsonData, null, 2)], { type: 'application/json' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'videoData.json';
+      link.click();
+   };
+
    // Modal Controls
    if (!isOpen) return null;
 
@@ -50,6 +64,8 @@ const ModalCropVideo = ({ isOpen, onClose }) => {
                         // onCropAreaChange={setCropArea}
                         isCropperActive={isCropperActive}
                         setPreview={setPreview}
+                        jsonData={jsonData}
+                        setJsonData={setJsonData}
                      />
                   </div>
 
@@ -70,7 +86,7 @@ const ModalCropVideo = ({ isOpen, onClose }) => {
                <div className='flex gap-2 items-center flex-wrap'>
                   <CustomButton buttonText={"Start Cropper"} onClickHandle={handleStartCropper} isDisabled={isCropperActive} />
                   <CustomButton buttonText={"Remove Cropper"} onClickHandle={handleRemoveCropper} isDisabled={!isCropperActive} />
-                  <CustomButton buttonText={"Generate Preview"} isDisabled={true} />
+                  <CustomButton buttonText={"Generate Preview"} onClickHandle={downloadJson} isDisabled={!isCropperActive}/>
                </div>
                <div className='flex gap-2 items-center flex-wrap'>
                   <CustomButton buttonText={"Cancel"} buttonType={"gray"} onClickHandle={onClose} />
